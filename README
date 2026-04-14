@@ -1,0 +1,23 @@
+# KD-Tree – C++
+
+Implémentation d'un arbre KD-Tree en C++ pour la gestion de points en 2 dimensions.
+
+## Fonctionnalités
+
+- **Insertion** de points (x, y)
+- **Recherche** d'un point dans l'arbre
+- **Suppression** d'un point avec restructuration
+- **Plus proche voisin** (Nearest Neighbor Search)
+
+## Structure du projet
+
+├── KDNode.h    # Structure d'un nœud (point 2D + fils gauche/droit)
+├── KDTree.h    # Classe KDTree (insert, search, remove, nearestNeighbor)
+└── main.cpp    # Tests et démonstrations des fonctionnalités
+
+
+## Compilation et exécution
+
+```bash
+g++ -std=c++17 *.cpp -o programme.exe
+./programme.exe
