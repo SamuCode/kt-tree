@@ -11,6 +11,7 @@ Implémentation d'un arbre KD-Tree en C++ pour la gestion de points en 2 dimensi
 
 ## Structure du projet
 
+├── Constants.h    # Constantes globales du projet  
 ├── Point.h    # Structure d'un Point 
 ├── KDNode.h    # Structure d'un nœud (point 2D + fils gauche/droit)
 ├── KDTree.h    # Classe KDTree (insert, search, remove, nearestNeighbor)
