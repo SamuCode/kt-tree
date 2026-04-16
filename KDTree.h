@@ -2,49 +2,49 @@
 #define KDTREE_H
 
 #include "KDNode.h"
+#include "Constants.h"
 #include <array>
 #include <optional>
 #include <cmath>
 #include <limits>
 
-template <std::size_t K>
 class KDTree {
     public:
         KDTree() : root(nullptr) {}
 
         //Insertion
-        void insert(const std::array<double, K>& point) {
+        void insert(const Point& point) {
             root = insertRec(root, point, 0);
         }
 
         //Recherche
-        bool search(const std::array<double, K>& point) const {
+        bool search(const Point& point) const {
             return searchRec(root, point, 0);
         }
 
         //Suppression
-        void remove(const std::array<double, K>& point) {
+        void remove(const Point& point) {
             root = removeRec(root, point, 0);
         }
 
         // Plus proche voisin
-        std::optional<std::array<double, K>> nearestNeighbor(const std::array<double, K>& target) const {
+        std::optional<Point> nearestNeighbor(const Point& target) const {
             if (!root) return std::nullopt;
 
-            KDNode<K>* best = nullptr;
+            KDNode* best = nullptr;
             double bestDist = std::numeric_limits<double>::infinity();
             nearestRec(root, target, 0, best, bestDist);
             return best->point;
         }
 
     private:
-        KDNode<K>* root;
+        KDNode* root;
 
         //Insertion récursive
-        KDNode<K>* insertRec(KDNode<K>* node, const std::array<double, K>& point, std::size_t depth) {
-            if (!node) return new KDNode<K>(point);
+        KDNode* insertRec(KDNode* node, const Point& point, std::size_t depth) {
+            if (!node) return new KDNode(point);
 
-            std::size_t axis = depth % K;
+            std::size_t axis = depth % DIM;
             if (point[axis] < node->point[axis])
                 node->left = insertRec(node->left, point, depth + 1);
             else
@@ -54,11 +54,11 @@ class KDTree {
         }
 
         //Recherche récursive
-        bool searchRec(KDNode<K>* node, const std::array<double, K>& point, std::size_t depth) const {
+        bool searchRec(KDNode* node, const Point& point, std::size_t depth) const {
             if (!node) return false;
             if (node->point == point) return true;
 
-            std::size_t axis = depth % K;
+            std::size_t axis = depth % DIM;
             if (point[axis] < node->point[axis])
                 return searchRec(node->left, point, depth + 1);
             else
@@ -66,20 +66,20 @@ class KDTree {
         }
 
         // Trouver le nœud avec la valeur minimale sur un axe donné
-        KDNode<K>* findMin(KDNode<K>* node, std::size_t axis, std::size_t depth) {
+        KDNode* findMin(KDNode* node, std::size_t axis, std::size_t depth) {
             if (!node) return nullptr;
 
-            std::size_t currentAxis = depth % K;
+            std::size_t currentAxis = depth % DIM;
 
             if (currentAxis == axis) {
                 if (!node->left) return node;
                 return findMin(node->left, axis, depth + 1);
             }
 
-            KDNode<K>* leftMin = findMin(node->left, axis, depth + 1);
-            KDNode<K>* rightMin = findMin(node->right, axis, depth + 1);
+            KDNode* leftMin = findMin(node->left, axis, depth + 1);
+            KDNode* rightMin = findMin(node->right, axis, depth + 1);
 
-            KDNode<K>* minNode = node;
+            KDNode* minNode = node;
             if (leftMin && leftMin->point[axis] < minNode->point[axis]) minNode = leftMin;
             if (rightMin && rightMin->point[axis] < minNode->point[axis]) minNode = rightMin;
 
@@ -87,19 +87,19 @@ class KDTree {
         }
 
         // Suppression récursive
-        KDNode<K>* removeRec(KDNode<K>* node, const std::array<double, K>& point, std::size_t depth) {
+        KDNode* removeRec(KDNode* node, const Point& point, std::size_t depth) {
             if (!node) return nullptr;
 
-            std::size_t axis = depth % K;
+            std::size_t axis = depth % DIM;
 
             if (node->point == point) {
                 if (node->right) {
-                    KDNode<K>* minNode = findMin(node->right, axis, depth + 1);
+                    KDNode* minNode = findMin(node->right, axis, depth + 1);
                     node->point = minNode->point;
                     node->right = removeRec(node->right, minNode->point, depth + 1);
                 }
                 else if (node->left) {
-                    KDNode<K>* minNode = findMin(node->left, axis, depth + 1);
+                    KDNode* minNode = findMin(node->left, axis, depth + 1);
                     node->point = minNode->point;
                     node->right = removeRec(node->left, minNode->point, depth + 1);
                     node->left = nullptr;
@@ -120,9 +120,9 @@ class KDTree {
         }
 
         // Calcul de la distance au carré entre deux points
-        double dist2(const std::array<double, K>& a, const std::array<double, K>& b) const {
+        double dist2(const Point& a, const Point& b) const {
             double s = 0.0;
-            for (std::size_t i = 0; i < K; ++i) {
+            for (std::size_t i = 0; i < 2; ++i) {
                 double d = a[i] - b[i];
                 s += d * d;
             }
@@ -130,10 +130,10 @@ class KDTree {
         }
 
         // Recherche du plus proche voisin récursive
-        void nearestRec(KDNode<K>* node,
-                        const std::array<double, K>& target,
+        void nearestRec(KDNode* node,
+                        const Point& target,
                         std::size_t depth,
-                        KDNode<K>*& best,
+                        KDNode*& best,
                         double& bestDist) const {
             if (!node) return;
 
@@ -143,10 +143,10 @@ class KDTree {
                 best = node;
             }
 
-            std::size_t axis = depth % K;
+            std::size_t axis = depth % DIM;
 
-            KDNode<K>* first = (target[axis] < node->point[axis]) ? node->left : node->right;
-            KDNode<K>* second = (first == node->left) ? node->right : node->left;
+            KDNode* first = (target[axis] < node->point[axis]) ? node->left : node->right;
+            KDNode* second = (first == node->left) ? node->right : node->left;
 
             nearestRec(first, target, depth + 1, best, bestDist);
 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KD-Tree</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- D3.js -->
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+      <h1 class="text-2xl font-bold text-slate-800 mb-2">Affichage d’un KD-Tree</h1>
+      <p class="text-slate-600 mb-6">
+        Exemple avec les points (40,45), (15,70) et (70,10)
+      </p>
+
+      <div class="overflow-auto">
+        <svg id="treeSvg" width="900" height="500" class="w-full"></svg>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const treeData = {
+      id: 1,
+      coords: [40, 45],
+      left: {
+        id: 2,
+        coords: [15, 70],
+        left: null,
+        right: null
+      },
+      right: {
+        id: 3,
+        coords: [70, 10],
+        left: null,
+        right: null
+      }
+    };
+
+    // Transformer ton format en format hiérarchique pour D3
+    function toHierarchy(node, depth = 0) {
+      if (!node) return null;
+
+      const children = [];
+      if (node.left) children.push(toHierarchy(node.left, depth + 1));
+      if (node.right) children.push(toHierarchy(node.right, depth + 1));
+
+      return {
+        name: `Nœud ${node.id}`,
+        id: node.id,
+        coords: node.coords,
+        axis: depth % 2 === 0 ? "x" : "y",
+        children: children.length ? children : null
+      };
+    }
+
+    const data = toHierarchy(treeData);
+
+    const svg = d3.select("#treeSvg");
+    const width = 900;
+    const height = 500;
+    const margin = { top: 50, right: 80, bottom: 50, left: 80 };
+
+    const root = d3.hierarchy(data);
+
+    const treeLayout = d3.tree().size([
+      width - margin.left - margin.right,
+      height - margin.top - margin.bottom
+    ]);
+
+    treeLayout(root);
+
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Liens
+    g.selectAll(".link")
+      .data(root.links())
+      .enter()
+      .append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#94a3b8")
+      .attr("stroke-width", 2)
+      .attr("d", d3.linkVertical()
+        .x(d => d.x)
+        .y(d => d.y)
+      );
+
+    // Nœuds
+    const node = g.selectAll(".node")
+      .data(root.descendants())
+      .enter()
+      .append("g")
+      .attr("transform", d => `translate(${d.x},${d.y})`);
+
+    node.append("circle")
+      .attr("r", 28)
+      .attr("fill", "#2563eb")
+      .attr("stroke", "#1e293b")
+      .attr("stroke-width", 2);
+
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "-0.2em")
+      .attr("fill", "white")
+      .attr("font-size", "12px")
+      .attr("font-weight", "bold")
+      .text(d => `ID ${d.data.id}`);
+
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", "1.1em")
+      .attr("fill", "white")
+      .attr("font-size", "10px")
+      .text(d => `(${d.data.coords[0]}, ${d.data.coords[1]})`);
+
+    // Etiquettes gauche / droite
+    root.descendants().forEach(d => {
+      if (d.parent) {
+        const label = d.parent.children[0] === d ? "left" : "right";
+
+        g.append("text")
+          .attr("x", (d.x + d.parent.x) / 2)
+          .attr("y", (d.y + d.parent.y) / 2 - 8)
+          .attr("text-anchor", "middle")
+          .attr("font-size", "12px")
+          .attr("fill", "#334155")
+          .attr("font-weight", "600")
+          .text(label);
+      }
+    });
+
+    // Affichage axe de découpe
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("dy", 48)
+      .attr("fill", "#0f172a")
+      .attr("font-size", "12px")
+      .attr("font-weight", "600")
+      .text(d => `axe: ${d.data.axis}`);
+  </script>
+</body>
+</html>
