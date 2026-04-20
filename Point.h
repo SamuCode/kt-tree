@@ -18,7 +18,7 @@ struct Point {
             }
         }
         return true;
-    }
+    } 
 };
 
 #endif
