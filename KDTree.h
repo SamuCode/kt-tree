@@ -77,7 +77,6 @@ class KDTree {
                 return findMin(node->left, axis, depth + 1);
             }
 
-            // Sinon, on explore les deux sous-arbres et l'actuel et on retourne le minimum
             KDNode* leftMin = findMin(node->left, axis, depth + 1);
             KDNode* rightMin = findMin(node->right, axis, depth + 1);
 
@@ -94,17 +93,12 @@ class KDTree {
 
             std::size_t axis = depth % DIM;
 
-            // Si le point à supprimer est trouvé
             if (node->point == point) {
-                // Si le nœud a un sous-arbre droit, trouver le minimum du sous-arbre droit pour remplacer le nœud
                 if (node->right) {
-                    // Trouver le minimum du sous-arbre droit
                     KDNode* minNode = findMin(node->right, axis, depth + 1);
-                    // Remplacer le point du nœud actuel par le point du minimum trouvé
                     node->point = minNode->point;
-                    // Supprimer le nœud minimum du sous-arbre droit
                     node->right = removeRec(node->right, minNode->point, depth + 1);
-                }//si le nœud n'a pas de sous-arbre droit mais a un sous-arbre gauche, trouver le minimum du sous-arbre gauche pour remplacer le nœud
+                }
                 else if (node->left) {
                     KDNode* minNode = findMin(node->left, axis, depth + 1);
                     node->point = minNode->point;

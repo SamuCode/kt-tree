@@ -1,8 +1,43 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <limits>
 #include "KDTree.h"
 using namespace std;
+
+// Fonction pour valider et lire un entier
+int lireEntier(const string& prompt) {
+    int valeur;
+    while (true) {
+        cout << prompt;
+        cin >> valeur;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrée invalide. Veuillez saisir un entier.\n";
+        } else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valeur;
+        }
+    }
+}
+
+// Fonction pour valider et lire un double
+double lireDouble(const string& prompt) {
+    double valeur;
+    while (true) {
+        cout << prompt;
+        cin >> valeur;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrée invalide. Veuillez saisir un nombre réel.\n";
+        } else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valeur;
+        }
+    }
+}
 
 int main() {
     KDTree tree;
@@ -42,51 +77,61 @@ int main() {
         std::cout << "3. Supprimer un point\n";
         std::cout << "4. Rechercher le plus proche voisin\n";
         std::cout << "0. Quitter\n" << std::endl;
-        std::cout << "Votre choix : ";
-        std::cin >> choix;
+        choix = lireEntier("Votre choix : ");
+
+        if (choix < 0 || choix > 4) {
+            cout << "Choix invalide. Veuillez choisir entre 0 et 4.\n";
+            continue;
+        }
 
         if (choix == 1) {
-            int id;
-            double x, y;
-            std::cout << "ID : ";
-            std::cin >> id;
-            std::cout << "X : ";
-            std::cin >> x;
-            std::cout << "Y : ";
-            std::cin >> y;
+            int id = lireEntier("ID : ");
+            double x = lireDouble("X : ");
+            double y = lireDouble("Y : ");
+
+            // Vérifier si l'ID existe déjà
+            bool idExists = false;
+            for (const auto& pt : listePoints) {
+                if (pt.id == id) {
+                    idExists = true;
+                    break;
+                }
+            }
+            if (idExists) {
+                cout << "Erreur : Un point avec cet ID existe déjà.\n";
+                continue;
+            }
+
+            // Vérifier si le point (coordonnées) existe déjà
+            if (tree.search(Point{-1, {x, y}})) {
+                cout << "Erreur : Un point avec ces coordonnées existe déjà.\n";
+                continue;
+            }
 
             tree.insert(Point{id, {x, y}});
+            listePoints.push_back(Point{id, {x, y}});
             std::cout << "Point ajouté.\n";
         }
 
         else if (choix == 2) {
-            double x, y;
-            std::cout << "X : ";
-            std::cin >> x;
-            std::cout << "Y : ";
-            std::cin >> y;
+            double x = lireDouble("X : ");
+            double y = lireDouble("Y : ");
 
             bool found = tree.search(Point{-1, {x, y}});
             std::cout << (found ? "Point trouvé.\n" : "Point non trouvé.\n");
         }
 
         else if (choix == 3) {
-            double x, y;
-            std::cout << "X : ";
-            std::cin >> x;
-            std::cout << "Y : ";
-            std::cin >> y;
+            double x = lireDouble("X : ");
+            double y = lireDouble("Y : ");
 
             tree.remove(Point{-1, {x, y}});
             std::cout << "Suppression effectuée.\n";
         }
 
         else if (choix == 4) {
-            double x, y;
-            std::cout << "X : ";
-            std::cin >> x;
-            std::cout << "Y : ";
-            std::cin >> y;
+            double x = lireDouble("X : ");
+            double y = lireDouble("Y : ");
 
             auto nn = tree.nearestNeighbor(Point{-1, {x, y}});
             if (nn.has_value()) {
